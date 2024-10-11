@@ -3,23 +3,24 @@ import aiohttp
 from urllib.parse import urljoin, urlparse
 from collections import deque
 from bs4 import BeautifulSoup
-from crawler.crawler_utils import Logger  
-from crawler.crawler_utils import Utils
+from crawler.crawler_utils import Logger 
+from typing import Optional, Set, Tuple, List
 
 class Crawler:
-    def __init__(self, logger=None):
-        self.visited = set()
-        self.queue = deque()
-        self.logger = logger if logger else Logger(level='INFO')  # Default log level
+    '''Craler class with main methods for getting links and travering found links'''
+    def __init__(self, logger: Optional[Logger] = None) -> None:
+        self.visited: Set[str] = set()
+        self.queue: deque[Tuple[str, int]] = deque()
+        self.logger: Logger = logger if logger else Logger(level='INFO')  # Default log level
 
-    def is_valid(self, url):
+    def is_valid(self, url: str) -> bool:
         """
         Checks if a URL is valid and properly formatted.
         """
         parsed = urlparse(url)
         return bool(parsed.netloc) and bool(parsed.scheme)
 
-    def log(self, message, level='info'):
+    def log(self, message: str, level: str = 'info') -> None:
         """ Centralized logging method. """
         if level.lower() == 'error':
             self.logger.log_error(message)
@@ -30,7 +31,7 @@ class Crawler:
         elif level.lower() == 'info':
             self.logger.log_info(message)
 
-    async def get_all_links(self, session, url):
+    async def get_all_links(self, session: aiohttp.ClientSession, url: str) -> Set[str]:
         """
         Asynchronously fetches the content of the page and extracts all links.
         
@@ -41,7 +42,7 @@ class Crawler:
         Returns:
         - A set of URLs found on the page.
         """
-        links = set()  # Set to hold found links
+        links: Set[str] = set()  # Set to hold found links
         try:
             self.log(f"Attempting to fetch: {url}", level='info')
             async with session.get(url, timeout=10) as response:
@@ -65,7 +66,7 @@ class Crawler:
 
         return links
 
-    async def crawl(self, start_url, max_depth=2, clean_links=False):
+    async def crawl(self, start_url: str, max_depth: int = 2) -> Set[str]:
         """
         Crawl from the start_url to a maximum depth, storing links in a queue.
         """
@@ -73,7 +74,7 @@ class Crawler:
 
         async with aiohttp.ClientSession() as session:
             while self.queue:
-                tasks = []  # List of tasks for concurrent fetching
+                tasks: List[asyncio.Future] = []  # List of tasks for concurrent fetching
                 for _ in range(len(self.queue)):
                     current_url, depth = self.queue.popleft()
 
@@ -95,11 +96,6 @@ class Crawler:
                         if link not in self.visited:
                             self.queue.append((link, depth + 1))  # Add to the queue with depth + 1
 
-        # Clean and return unique links after the crawl is complete
-        if clean_links:
-            cleaned_links = Utils.clean_links(self.visited, start_url)
-            self.logger.log_success(f"Cleaned unique URLs: {cleaned_links}")
-            return cleaned_links
-
         self.logger.log_success(f"Visited URLs: {self.visited}")
         return self.visited
+
