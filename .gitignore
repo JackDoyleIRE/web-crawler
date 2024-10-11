@@ -1,0 +1,9 @@
+# Ignore Python cache files and directories
+__pycache__/
+*.py[cod]
+
+# Ignore log files
+*.log
+
+# Ignore Docker-related files that could be auto-generated or not useful to track
+*.env

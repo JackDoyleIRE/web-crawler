@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  test-webserver:
+    build:
+      context: ./testing
+      dockerfile: Dockerfile  
+    volumes:
+      - .:/app
+    ports:
+      - "8000:8000"
+    command: python3 -m http.server 8000 --directory /app/testing/test_cases
+
+  test-runner:
+    build:
+      context: ./testing
+      dockerfile: Dockerfile  
+    volumes:
+      - .:/app
+    depends_on:
+      - test-webserver  # Ensure web server starts before running tests
+    command:  sh -c "sleep 2 && python3 -m unittest discover -s /app/testing -p '*.py'"
+
+  crawler:
+    build:
+      context: .  
+    volumes:
+      - .:/app  
+    command: python3 main.py  
+    stdin_open: true  # Allow interaction with CLI
+    tty: true  # Allow interactive terminal (for CLI input/output)

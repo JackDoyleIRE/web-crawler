@@ -1,0 +1,5 @@
+urls:
+  - http://example.com
+  - http://test-webserver:8000/test_site_1.html
+  - http://another-url.com
+  - https://www.overstory.com/
