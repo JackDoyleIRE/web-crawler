@@ -10,7 +10,7 @@ test_cases = [
         ],
         "clean_links": False  # Disable link cleaning for this test
     },
-    # Testing link cleaning
+    # 
     {
         "name": "Link Cleaning Test - Duplicate Links",
         "start_url": "http://test-webserver:8000/test_link_cleaning.html",

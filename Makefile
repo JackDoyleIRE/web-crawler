@@ -1,6 +1,7 @@
 # Define variables
 DOCKER_COMPOSE=docker-compose
 DOCKER_COMPOSE_DOWN=$(DOCKER_COMPOSE) down --volumes
+DOCKER_COMPOSE_REMOVE=$(DOCKER_COMPOSE) rm -f  # Force remove containers
 DOCKER_COMPOSE_BUILD=$(DOCKER_COMPOSE) build
 DOCKER_COMPOSE_EXEC=$(DOCKER_COMPOSE) exec
 
@@ -28,10 +29,18 @@ build:
 start-cli:
 	$(START_COMMAND)
 
-# Clean up the project
+# Clean up the project (removing containers)
 .PHONY: clean
 clean:
 	@echo "Cleaning up Docker containers and volumes..."
+	$(DOCKER_COMPOSE_DOWN)  # Bring down and remove volumes
+	@echo "Removing any stopped containers..."
+	$(DOCKER_COMPOSE_REMOVE)  # Remove any stopped containers
+
+# Stop the Docker containers (without removing them)
+.PHONY: stop
+stop:
+	@echo "Stopping Docker containers..."
 	$(DOCKER_COMPOSE_DOWN)
 
 # Start the test web server, reusing the container if already running
@@ -50,5 +59,6 @@ test-server:
 test: test-server
 	@echo "Running tests..."
 	$(RUN_TESTS_COMMAND)
+
 
 
