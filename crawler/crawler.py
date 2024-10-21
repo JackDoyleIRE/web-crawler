@@ -1,9 +1,11 @@
 import asyncio
 import aiohttp
+import time
 from urllib.parse import urljoin, urlparse
 from collections import deque
 from bs4 import BeautifulSoup
 from crawler.crawler_utils import Logger 
+from crawler.crawler_utils import RateLimiter
 from typing import Optional, Set, Tuple, List
 
 class Crawler:
@@ -45,7 +47,8 @@ class Crawler:
         links: Set[str] = set()  # Set to hold found links
         try:
             self.log(f"Attempting to fetch: {url}", level='info')
-            async with session.get(url, timeout=10) as response:
+            client = RateLimiter(client)
+            async with client.get(url, timeout=10) as response:
                 if response.status == 200:
                     self.log(f"Received response for {url} with status code: {response.status}", level='success')
                     html_content = await response.text()

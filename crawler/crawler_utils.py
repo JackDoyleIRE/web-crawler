@@ -2,6 +2,7 @@ import os
 import socket
 from datetime import datetime
 from typing import Optional, Literal
+import time
 
 class Logger:
     class Colors:
@@ -70,3 +71,18 @@ class Logger:
         """Close the log file if opened."""
         if self.file:
             self.file.close()
+
+class RateLimiter:
+    Rate: 10
+    MAX_TOKENS: 10
+
+    def __init__(self, client):
+        self.client = client
+        self.tokens = self.MAX_TOKENS
+        self.update_at = time.monotonic()
+    
+   # Function to aquire tokens if none are available
+
+   
+
+   # A function to refill tokens based on time passed
