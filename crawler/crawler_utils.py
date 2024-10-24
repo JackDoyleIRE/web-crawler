@@ -3,6 +3,7 @@ import socket
 from datetime import datetime
 from typing import Optional, Literal
 import time
+import asyncio
 
 class Logger:
     class Colors:
@@ -73,16 +74,30 @@ class Logger:
             self.file.close()
 
 class RateLimiter:
-    Rate: 10
-    MAX_TOKENS: 10
+    Rate = 10
+    MAX_TOKENS = 10
 
-    def __init__(self, client):
-        self.client = client
+    def __init__(self):
         self.tokens = self.MAX_TOKENS
         self.update_at = time.monotonic()
     
    # Function to aquire tokens if none are available
 
-   
+    async def aquire(self) -> None:
+        while self.tokens <= 0:
+            self._refill_tokens()
+            await asyncio.sleep(0.1)
+        self.tokens -= 1
 
    # A function to refill tokens based on time passed
+
+    def _refill_tokens(self) -> None:
+        now = time.monotonic()
+        elapsed = now - self.updated_at
+        added_tokens = int(elapsed * self.RATE)
+        if added_tokens > 0:
+            self.tokens = min(self.MAX_TOKENS, self.tokens + added_tokens)
+            self.updated = now
+
+
+

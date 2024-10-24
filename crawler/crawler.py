@@ -33,7 +33,7 @@ class Crawler:
         elif level.lower() == 'info':
             self.logger.log_info(message)
 
-    async def get_all_links(self, session: aiohttp.ClientSession, url: str) -> Set[str]:
+    async def get_all_links(self, session: aiohttp.ClientSession, url: str, rate_limiter: RateLimiter) -> Set[str]:
         """
         Asynchronously fetches the content of the page and extracts all links.
         
@@ -47,8 +47,8 @@ class Crawler:
         links: Set[str] = set()  # Set to hold found links
         try:
             self.log(f"Attempting to fetch: {url}", level='info')
-            client = RateLimiter(client)
-            async with client.get(url, timeout=10) as response:
+            await RateLimiter.aquire()
+            async with session.get(url, timeout=10) as response:
                 if response.status == 200:
                     self.log(f"Received response for {url} with status code: {response.status}", level='success')
                     html_content = await response.text()
@@ -75,6 +75,8 @@ class Crawler:
         """
         self.queue.append((start_url, 0))
 
+        rate_limiter = RateLimiter()
+
         async with aiohttp.ClientSession() as session:
             while self.queue:
                 tasks: List[asyncio.Future] = []  # List of tasks for concurrent fetching
@@ -88,7 +90,7 @@ class Crawler:
                         self.logger.log_header(f"Crawling: {current_url} at depth {depth}")
                         self.visited.add(current_url)
                         # Add the task to fetch links asynchronously
-                        tasks.append(self.get_all_links(session, current_url))
+                        tasks.append(self.get_all_links(session, current_url, rate_limiter))
 
                 # Wait for all tasks to complete
                 results = await asyncio.gather(*tasks)
